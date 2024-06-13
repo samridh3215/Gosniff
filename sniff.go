@@ -31,9 +31,9 @@ func Sniff() {
 		PrintDevs(devs)
 	}
 
-	// fmt.Println("Enter interface number to proceed: ")
-	// fmt.Scanln(&inteface_choice)
-	// fmt.Println("Chose ", inteface_choice)
+	fmt.Println("Enter interface number to proceed: ")
+	fmt.Scanln(&inteface_choice)
+	fmt.Println("Chose ", inteface_choice)
 
 	handler, err := pcap.OpenLive(devs[inteface_choice].Name, 2000, promisc_mode, pcap.BlockForever)
 	if err != nil {

@@ -24,10 +24,8 @@ func main() {
 	initLogs()
 
 	go func() {
-		fs := http.FileServer(http.Dir("./webpage"))
-		http.Handle("/", fs)
-		http.HandleFunc("/ws", HandleConnections)
 
+		http.HandleFunc("/ws", HandleConnections)
 		infoLog.Println("http server started on :8080")
 		err := http.ListenAndServe(":8080", nil)
 		if err != nil {
