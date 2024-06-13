@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>GoSniff</title>
+</head>
+<style>
+    table.darkTable {
+  font-family: "Arial Black", Gadget, sans-serif;
+  border: 2px solid #000000;
+  background-color: #4A4A4A;
+  width: 100%;
+  height: 200px;
+  text-align: center;
+  border-collapse: collapse;
+}
+table.darkTable td, table.darkTable th {
+  border: 1px solid #4A4A4A;
+  padding: 3px 2px;
+}
+table.darkTable tbody td {
+  font-size: 13px;
+  color: #E6E6E6;
+}
+table.darkTable tr:nth-child(even) {
+  background: #888888;
+}
+table.darkTable thead {
+    color: white;
+  background: #000000;
+  border-bottom: 3px solid #000000;
+}
+table.darkTable thead th {
+  font-size: 15px;
+  font-weight: bold;
+  color: #E6E6E6;
+  text-align: center;
+  border-left: 2px solid #4A4A4A;
+}
+table.darkTable thead th:first-child {
+  border-left: none;
+}
+
+table.darkTable tfoot {
+  font-size: 12px;
+  font-weight: bold;
+  color: #E6E6E6;
+  background: #000000;
+  background: -moz-linear-gradient(top, #404040 0%, #191919 66%, #000000 100%);
+  background: -webkit-linear-gradient(top, #404040 0%, #191919 66%, #000000 100%);
+  background: linear-gradient(to bottom, #404040 0%, #191919 66%, #000000 100%);
+  border-top: 1px solid #4A4A4A;
+}
+table.darkTable tfoot td {
+  font-size: 12px;
+}
+</style>
+
+<body>
+    <h1>Packet Sniff</h1>
+    <div id="output"></div>
+    <div >
+        <table class="darkTable">
+            <thead>
+                <tr>
+                    <td>Packet number</td>
+                    <td>SRC PORT</td>
+                    <td>SRC DST</td>
+                    <td>SRC IP</td>
+                    <td>DST IP</td>
+                    <td>SRC MAC</td>
+                    <td>DST MAC</td>
+                </tr>
+            </thead>
+            <tbody id="sniffed-packets">
+                
+
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        var socket = new WebSocket("ws://localhost:8080/ws");
+        var packet_count = 1
+        socket.onopen = function(e) {
+            document.getElementById('output').innerHTML += "<p>Connection established</p>";
+        };
+
+        socket.onmessage = function(event) {
+
+            var jsonified  =JSON.parse(event.data)
+            let table_data =  `<tr>
+                    <td>${packet_count}</td>
+                    <td>${jsonified['transport_layer']['port_src']}</td>
+                    <td>${jsonified['transport_layer']['port_dst']}</td>
+                    <td>${jsonified['network_layer']['ip_src']}</td>
+                    <td>${jsonified['network_layer']['ip_dst']}</td>
+                    <td>${jsonified['link_layer']['mac_src']}</td>
+                    <td>${jsonified['link_layer']['mac_dst']}</td>
+                </tr>`
+            document.getElementById('sniffed-packets').innerHTML += table_data;
+            console.log(jsonified)
+            packet_count = packet_count+1
+        };
+
+        socket.onclose = function(event) {
+            if (event.wasClean) {
+                document.getElementById('output').innerHTML += `<p>Connection closed cleanly, code=${event.code} reason=${event.reason}</p>`;
+            } else {
+                document.getElementById('output').innerHTML += "<p>Connection died</p>";
+            }
+        };
+
+        socket.onerror = function(error) {
+            document.getElementById('output').innerHTML += `<p>Error: ${error.message}</p>`;
+        };
+
+    </script>
+</body>
+</html>
