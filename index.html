@@ -72,8 +72,9 @@ table.minimalistBlack tfoot td {
             <thead>
                 <tr>
                     <td>Packet number</td>
+                    <td>Protocol</td>
                     <td>SRC PORT</td>
-                    <td>SRC DST</td>
+                    <td>DST PORT</td>
                     <td>SRC IP</td>
                     <td>DST IP</td>
                     <td>SRC MAC</td>
@@ -97,21 +98,46 @@ table.minimalistBlack tfoot td {
         socket.onmessage = function(event) {
 
             var jsonified  =JSON.parse(event.data)
+            let protocol = ""
+            if (jsonified['link_layer'] ){
+              protocol = jsonified['link_layer']['protocol']
+              if (jsonified['network_layer']){
+                protocol = jsonified['network_layer']['protocol']
+                  if (jsonified['transport_layer']){
+                    protocol  = jsonified['transport_layer']['protocol']
+                    if (jsonified['application_layer']){
+                      console.log(jsonified['transport_layer']['port_dst'], typeof(jsonified['transport_layer']['port_dst']))
+                      switch (jsonified['transport_layer']['port_dst']){
+                        case "53":
+                          protocol = "DNS"
+                          break;
+                        case "443":
+                          protocol = "HTTPS"
+                          break;
+                        default:
+                          protocol = "App layer"
+                      }
+                    }
+                  }
+              }
+            }
+
+            
             let table_data =  `<tr>
                     <td>${packet_count}</td>
-                    <td>${jsonified['transport_layer']['port_src']}</td>
-                    <td>${jsonified['transport_layer']['port_dst']}</td>
-                    <td>${jsonified['network_layer']['ip_src']}</td>
-                    <td>${jsonified['network_layer']['ip_dst']}</td>
-                    <td>${jsonified['link_layer']['mac_src']}</td>
-                    <td>${jsonified['link_layer']['mac_dst']}</td>
+                    <td>${protocol}</td>
+                    <td>${jsonified?.transport_layer?.port_src ?? "NA"}</td>
+                    <td>${jsonified?.transport_layer?.port_dst ?? "NA"}</td>
+                    <td>${jsonified?.network_layer?.ip_src ?? "NA"}</td>
+                    <td>${jsonified?.network_layer?.ip_dst ?? "NA"}</td>
+                    <td>${jsonified?.link_layer?.mac_src ?? "NA"}</td>
+                    <td>${jsonified?.link_layer?.mac_dst ?? "NA"}</td>
 
                 </tr>`
             document.getElementById('sniffed-packets').innerHTML += table_data;
             console.log(jsonified)
-            packet_count = packet_count+1
-        };
-
+            packet_count = packet_count+1;
+              }
         socket.onclose = function(event) {
             if (event.wasClean) {
                 document.getElementById('output').innerHTML += `<p>Connection closed cleanly, code=${event.code} reason=${event.reason}</p>`;
