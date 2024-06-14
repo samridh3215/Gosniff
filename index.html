@@ -65,6 +65,12 @@ table.minimalistBlack tfoot td {
     <h1>Packet Sniffer implementation in  </h1>
     <i style="font-size: 80px;" class="devicon-go-original-wordmark colored"></i>
     </div>
+    <div id="color_map">
+      <p style="color: blue;">Application</p>
+      <p style="color: green;">Transport</p>
+      <p style="color: indigo;">Network</p>
+      <p style="color: black;">Link</p>
+    </div>
     <div id="output"></div>
   </div>
     <div >
@@ -91,6 +97,12 @@ table.minimalistBlack tfoot td {
     <script>
         var socket = new WebSocket("ws://localhost:8080/ws");
         var packet_count = 1
+        var color_map = {
+          "Link": "black",
+          "Network": "indigo",
+          "Transport": "green",
+          "Application": "blue"
+        }
         socket.onopen = function(e) {
             document.getElementById('output').innerHTML = "<h2 style='color:green;'>Connection established with server</h2>";
         };
@@ -99,14 +111,24 @@ table.minimalistBlack tfoot td {
 
             var jsonified  =JSON.parse(event.data)
             let protocol = ""
+            let color = ""
+
             if (jsonified['link_layer'] ){
               protocol = jsonified['link_layer']['protocol']
+              color = color_map["Link"]
+
               if (jsonified['network_layer']){
                 protocol = jsonified['network_layer']['protocol']
+                color = color_map["Network"]
+
                   if (jsonified['transport_layer']){
                     protocol  = jsonified['transport_layer']['protocol']
+                    color = color_map["Transport"]
+
                     if (jsonified['application_layer']){
                       console.log(jsonified['transport_layer']['port_dst'], typeof(jsonified['transport_layer']['port_dst']))
+                      color = color_map["Application"]
+
                       switch (jsonified['transport_layer']['port_dst']){
                         case "53":
                           protocol = "DNS"
@@ -123,7 +145,7 @@ table.minimalistBlack tfoot td {
             }
 
             
-            let table_data =  `<tr>
+            let table_data =  `<tr style="color:${color}">
                     <td>${packet_count}</td>
                     <td>${protocol}</td>
                     <td>${jsonified?.transport_layer?.port_src ?? "NA"}</td>
